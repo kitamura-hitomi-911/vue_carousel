@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Carousel Mock</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* reset */
+        html, body, div, span, object, iframe,
+        h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+        abbr, address, cite, code,
+        del, dfn, em, img, ins, kbd, q, samp,
+        small, strong, sub, sup, var,
+        b, i,
+        dl, dt, dd, ol, ul, li,
+        fieldset, form, label, legend,
+        table, caption, tbody, tfoot, thead, tr, th, td,
+        article, aside, canvas, details, figcaption, figure,
+        footer, header, hgroup, menu, nav, section, summary,
+        time, mark, audio, video {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            outline: 0;
+            font-size: 100%;
+            vertical-align: baseline;
+            background: transparent;
+        }
+
+        body {
+            line-height: 1;
+        }
+
+        article, aside, details, figcaption, figure,
+        footer, header, hgroup, menu, nav, section {
+            display: block;
+        }
+
+        ul, ol {
+            list-style: none;
+        }
+
+        blockquote, q {
+            quotes: none;
+        }
+
+        blockquote:before, blockquote:after,
+        q:before, q:after {
+            content: '';
+            content: none;
+        }
+
+        a {
+            margin: 0;
+            padding: 0;
+            font-size: 100%;
+            vertical-align: baseline;
+            background: transparent;
+        }
+
+        del {
+            text-decoration: line-through;
+        }
+
+        abbr[title], dfn[title] {
+            border-bottom: 1px dotted;
+            cursor: help;
+        }
+
+        table {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+
+        input, select {
+            vertical-align: middle;
+        }
+
+        /* layout */
+        .l-banner{
+            padding:10px 0;
+            border-top:1px solid #ccc;
+            border-bottom:1px solid #ccc;
+        }
+
+        /* banners */
+        .banners{
+            position:relative;
+            max-width:600px;
+            padding:0 30px 26px;
+            margin:0 auto;
+        }
+        .banners-prev,
+        .banners-next{
+            display:block;
+            position:absolute;
+            top:0;
+            width:30px;
+            height:100%;
+        }
+        .banners-prev{
+            left:0;
+        }
+        .banners-next{
+            right:0;
+        }
+        .banners-prev:after,
+        .banners-next:after{
+            content:"";
+            position: absolute;
+            top: 50%;
+            margin-top: -23px;/* dot_nav用のbottom padding の半分を足す*/
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+        }
+        .banners-prev:after{
+            left:10px;
+            border-right: 12px solid #42aaf9;
+        }
+        .banners-next:after{
+            right:10px;
+            border-left: 12px solid #42aaf9;
+        }
+        .banners-prev:hover:after{
+            border-color:transparent #85d5ff transparent transparent;
+        }
+        .banners-next:hover:after{
+            border-color:transparent transparent transparent #85d5ff;
+        }
+        .banners-main{
+            width:100%;
+            overflow:hidden;
+        }
+        .banners-main ul{
+            display:flex;
+            transition:transform 0.75s linear 0s;
+        }
+        /* banners-item */
+        .banners-item{
+            flex: 1 1 auto;
+            padding:0 5px;
+        }
+        .banners-item a{
+            display:block;
+        }
+        .banners-item a img{
+            width:100%;
+            vertical-align: bottom;
+        }
+        @media only screen and (min-width:768px){
+            .banners{
+                padding-right:40px;
+                padding-left:40px;
+            }
+            .banners-prev,
+            .banners-next{
+                width:40px;
+            }
+            .banners-prev:after,
+            .banners-next:after {
+                margin-top: -33px;
+            }
+            .banners-prev:after{
+                left:6px;
+                border-width:20px 24px 20px 0;
+            }
+            .banners-next:after{
+                right:6px;
+                border-width:20px 0 20px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="l-banner">
+        <div id="banner"></div>
+    </div>
+    <script type="text/x-template" id="tmpl-banners">
+        <div class="banners">
+            <a href="#" class="banners-prev" @click.prevent="prev"></a>
+            <div class="banners-main">
+                <ul :style="list_style_obj">
+                    <banners-item v-for="banner in list_v" :banner="banner" :key="banner.img_path"></banners-item>
+                </ul>
+            </div>
+            <a href="#" class="banners-next" @click.prevent="next"></a>
+        </div>
+
+    </script>
+    <script type="text/x-template" id="tmpl-banners-item">
+        <li class="banners-item">
+            <a :href="banner.url"><img :src="banner.img_path" :alt="banner.alt"></a>
+        </li>
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script>
+        (function () {
+            "use strict";
+            Vue.component('banners', {
+                data:function(){
+                    return {
+                        current_num:0
+                    }
+                },
+                props:{
+                   list:{
+                       type:Array,
+                       required:true
+                   }
+                },
+                computed:{
+                    list_v:function(){
+                        return [].concat(this.list,this.list,this.list);
+                    },
+                    list_style_obj:function(){
+                        return {
+                            width: this.list_v.length * 100 + '%',
+                            transform: 'translateX(-'+ (100/this.list_v.length)*this.current_num+'%)'
+                        }
+                    }
+                },
+                created:function(){
+                    this.current_num = this.list.length;
+                },
+                template:"#tmpl-banners",
+                methods:{
+                    prev:function(){
+                        this.current_num = this.current_num === 0 ? this.list.length-1: --this.current_num;
+                    },
+                    next:function(){
+                        this.current_num = this.current_num === this.list.length-1 ? 0 : ++this.current_num;
+                    },
+                    move:function(index){
+                        this.current_num = index;
+                    }
+                }
+            });
+            Vue.component('banners-item', {
+                props:{
+                    banner:{
+                        type:Object,
+                        required:true
+                    }
+                },
+                template:"#tmpl-banners-item",
+                created:function(){
+                    console.log(this.banner);
+                }
+            });
+
+            new Vue({
+                el:'#banner',
+                template:'<banners :list="list"/>',
+                data:{
+                    list:[
+                        {
+                            img_path:'./banner1.png',
+                            url:'https:www.yahoo.co.jp/',
+                            alt:'リンク先１'
+                        },
+                        {
+                            img_path:'./banner2.png',
+                            url:'https:www.yahoo.co.jp/',
+                            alt:'リンク先２'
+                        },
+                        {
+                            img_path:'./banner3.png',
+                            url:'https:www.yahoo.co.jp/',
+                            alt:'リンク先３'
+                        },
+                        {
+                            img_path:'./banner4.png',
+                            url:'https:www.yahoo.co.jp/',
+                            alt:'リンク先４'
+                        },
+                        {
+                            img_path:'./banner5.png',
+                            url:'https:www.yahoo.co.jp/',
+                            alt:'リンク先５'
+                        },
+                        {
+                            img_path:'./banner6.png',
+                            url:'https:www.yahoo.co.jp/'
+                        },
+                        {
+                            img_path:'./banner7.png',
+                            url:'https:www.yahoo.co.jp/',
+                            alt:'リンク先７'
+                        },
+                    ]
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
