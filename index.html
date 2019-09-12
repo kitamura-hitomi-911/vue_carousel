@@ -134,12 +134,13 @@
         }
         .banners-main ul{
             display:flex;
+        }
+        .banners-main ul.is-moving{
             transition:transform 0.75s linear 0s;
         }
         /* banners-item */
         .banners-item{
             flex: 1 1 auto;
-            padding:0 5px;
         }
         .banners-item a{
             display:block;
@@ -180,8 +181,8 @@
         <div class="banners">
             <a href="#" class="banners-prev" @click.prevent="prev"></a>
             <div class="banners-main">
-                <ul :style="list_style_obj">
-                    <banners-item v-for="banner in list_v" :banner="banner" :key="banner.img_path"></banners-item>
+                <ul :style="list_style_obj" :class="list_class_obj">
+                    <banners-item v-for="banner in list_v" :banner="banner" :key="banner.index"></banners-item>
                 </ul>
             </div>
             <a href="#" class="banners-next" @click.prevent="next"></a>
@@ -193,14 +194,15 @@
             <a :href="banner.url"><img :src="banner.img_path" :alt="banner.alt"></a>
         </li>
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script>
         (function () {
             "use strict";
             Vue.component('banners', {
                 data:function(){
                     return {
-                        current_num:0
+                        current_num:1,
+                        is_moving:true
                     }
                 },
                 props:{
@@ -211,7 +213,18 @@
                 },
                 computed:{
                     list_v:function(){
-                        return [].concat(this.list,this.list,this.list);
+                        let ret_ary = [];
+                        let tmp_ary = this.list.map(function(item, item_index){
+                            item.index = item_index;
+                            item.kind = '';
+                            return item;
+                        });
+                        return tmp_ary;
+                    },
+                    list_class_obj:function(){
+                        return {
+                            'is-moving':!!this.is_moving
+                        }
                     },
                     list_style_obj:function(){
                         return {
@@ -221,14 +234,28 @@
                     }
                 },
                 created:function(){
-                    this.current_num = this.list.length;
+                    // this.current_num = this.list.length;
                 },
                 template:"#tmpl-banners",
                 methods:{
+                    fix_pos:function(){
+                        if(this.current_num === 0 || this.current_num === this.list_v.length-1){
+                            this.is_moving = false;
+                            if(this.current_num === 0){
+                                this.current_num = this.list_v.length - 2;
+                            }
+                            if(this.list_v.length - 1){
+                                this.current_num = 1;
+                            }
+                        }
+                        this.is_moving = true;
+                    },
                     prev:function(){
+                        this.fix_pos();
                         this.current_num = this.current_num === 0 ? this.list.length-1: --this.current_num;
                     },
                     next:function(){
+                        this.fix_pos();
                         this.current_num = this.current_num === this.list.length-1 ? 0 : ++this.current_num;
                     },
                     move:function(index){
